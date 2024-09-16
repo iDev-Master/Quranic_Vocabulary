@@ -5,10 +5,11 @@ import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
 import '../constants.dart';
 import '../models.dart';
+import '../custom_widgets.dart';
 
 class GamesPage extends StatefulWidget {
   final Word theWord;
-  final int currentLevel;
+  late final int currentLevel;
   final int updateUnlockedLevels;
 
   GamesPage({
@@ -34,22 +35,6 @@ class _GamesPageState extends State<GamesPage> with TickerProviderStateMixin {
   late List<Map<String, dynamic>> _shuffledAnswers; // Store answers and their correctness
 
   final _random = Random(); // Random generator
-
-  // Lists of possible feedback messages
-  final List<String> _correctMessages = [
-    "Молодец!",
-    "Отлично!",
-    "Так держать!",
-    "Правильно!",
-    "Talatkhon!"
-  ];
-
-  final List<String> _incorrectMessages = [
-    "Неправильно!",
-    "Не угадал!",
-    "Попробуй ещё раз!",
-    "Ошибся!"
-  ];
 
   @override
   void initState() {
@@ -99,8 +84,8 @@ class _GamesPageState extends State<GamesPage> with TickerProviderStateMixin {
       _isAnswering = true;
       // Choose a random feedback message from the correct or incorrect lists
       _feedbackMessage = isCorrect
-          ? _correctMessages[_random.nextInt(_correctMessages.length)]
-          : _incorrectMessages[_random.nextInt(_incorrectMessages.length)];
+          ? FeedbackMessages.correctMessages[_random.nextInt(FeedbackMessages.correctMessages.length)]
+          : FeedbackMessages.incorrectMessages[_random.nextInt(FeedbackMessages.incorrectMessages.length)];
 
       _selectedButtonIndex = index; // Mark the button pressed
       _messageBackgroundColor = isCorrect ? Colors.green.shade900 : Colors.red.shade900; // Set message background color
@@ -131,8 +116,8 @@ class _GamesPageState extends State<GamesPage> with TickerProviderStateMixin {
       if (_answerCount < 6) {
         _shuffleAnswers(); // Shuffle answers for the next question
       } else {
-        if (score / 10 > currentLevel) {
-          currentLevel + 1;
+        if (score / 10 > widget.currentLevel) {
+          widget.currentLevel++;
         }
         Navigator.pop(context);
       }
@@ -210,21 +195,9 @@ class _GamesPageState extends State<GamesPage> with TickerProviderStateMixin {
               bottom: 20, // Position the message at the bottom of the screen
               child: SlideTransition(
                 position: _slideAnimation,
-                child: Container(
-                  padding: const EdgeInsets.all(20),
-                  margin: const EdgeInsets.symmetric(horizontal: 20),
-                  decoration: BoxDecoration(
-                    color: _messageBackgroundColor,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Text(
-                    _feedbackMessage,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontSize: 32,
-                      color: Colors.white,
-                    ),
-                  ),
+                child: FeedbackMessages.feedbackMessageWidget(
+                  _feedbackMessage,
+                  _messageBackgroundColor,
                 ),
               ),
             ),
@@ -292,5 +265,4 @@ class _GamesPageState extends State<GamesPage> with TickerProviderStateMixin {
     );
   }
 }
-
 
