@@ -1,7 +1,10 @@
+
+
 import 'package:flutter/material.dart';
 import 'dart:math';
 import 'lesson.dart';
 import 'constants.dart';
+import 'games/questionary.dart';
 
 class LevelsPage extends StatefulWidget {
   @override
@@ -11,6 +14,7 @@ class LevelsPage extends StatefulWidget {
 class _LevelsPageState extends State<LevelsPage> with TickerProviderStateMixin {
   final List<AnimationController> _controllers = [];
   final List<Animation<double>> _animations = [];
+  final ScrollController _scrollController = ScrollController(); // Scroll controller for positioning
 
   @override
   void initState() {
@@ -33,16 +37,65 @@ class _LevelsPageState extends State<LevelsPage> with TickerProviderStateMixin {
         controller.forward();
       });
     }
+
+    // Scroll to show the current level slightly above the middle of the screen
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Define how many previous levels should be visible (e.g., 3 levels before current one)
+      final double offset = max(0, (currentLevel - 3) * 135.0); // Assume 120px height per level
+      _scrollController.animateTo(
+        offset,
+        duration: const Duration(milliseconds: 500),
+        curve: Curves.easeInOut,
+      );
+    });
   }
 
   @override
   void dispose() {
-    // Dispose all controllers
+    // Dispose all controllers and scroll controller
     for (var controller in _controllers) {
       controller.dispose();
     }
+    _scrollController.dispose();
     super.dispose();
   }
+
+  // Function to show a non-blocking pop-up message
+  void _showLockedLevelMessage(int level) {
+    final overlay = Overlay.of(context);
+    final overlayEntry = OverlayEntry(
+      builder: (context) => Positioned(
+        bottom: 60.0, // 60 points from the bottom
+        left: MediaQuery.of(context).size.width * 0.1, // Center horizontally with padding
+        child: Material(
+          color: Colors.transparent,
+          child: Container(
+            width: MediaQuery.of(context).size.width * 0.8, // 80% of screen width
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+            decoration: BoxDecoration(
+              color: Colors.black.withOpacity(0.5), // Set opacity to 0.5
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Text(
+              'Pass level $level to open this level',
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: Colors.white, fontSize: 18),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    // Insert the overlay entry into the Overlay
+    overlay.insert(overlayEntry);
+
+    // Remove the overlay after 3 seconds
+    Future.delayed(const Duration(seconds: 3), () {
+      overlayEntry.remove();
+    });
+  }
+
+  var questionIndexGenerator = GenerateQuestionsIndexes(howManyQuestions: 10);
 
   @override
   Widget build(BuildContext context) {
@@ -54,7 +107,6 @@ class _LevelsPageState extends State<LevelsPage> with TickerProviderStateMixin {
         children: [
           Positioned.fill(
             child: Image.asset(
-              // "background.jpg",
               "assets/images/background.jpg",
               fit: BoxFit.cover,
             ),
@@ -63,12 +115,13 @@ class _LevelsPageState extends State<LevelsPage> with TickerProviderStateMixin {
             child: Padding(
               padding: const EdgeInsets.all(0.0),
               child: CustomScrollView(
+                controller: _scrollController, // Scroll controller for positioning
                 slivers: [
                   SliverPadding(
                     padding: const EdgeInsets.fromLTRB(00, 20, 0, 100),
                     sliver: SliverList(
                       delegate: SliverChildBuilderDelegate(
-                        (context, index) {
+                            (context, index) {
                           bool isUnlocked = index + 1 <= currentLevel;
                           bool isCurrent = index + 1 == currentLevel;
                           final angle = (index + 10) * 0.25;
@@ -85,10 +138,14 @@ class _LevelsPageState extends State<LevelsPage> with TickerProviderStateMixin {
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (context) =>
-                                            LessonPage(level: index + 1),
+                                        builder: (context) => LessonPage(
+                                          level: index + 1,
+                                          allQuestions: questionIndexGenerator.generateFirstList(index + 1),
+                                        ),
                                       ),
                                     );
+                                  } else {
+                                    _showLockedLevelMessage(currentLevel); // Show the pop-up message
                                   }
                                 },
                                 child: Center(
@@ -99,23 +156,17 @@ class _LevelsPageState extends State<LevelsPage> with TickerProviderStateMixin {
                                     decoration: BoxDecoration(
                                       color: isUnlocked
                                           ? (isCurrent
-                                              ? levelLockedStyle
-                                              : levelUnlockedStyle)
+                                          ? levelLockedStyle
+                                          : levelUnlockedStyle)
                                           : currentLevelStyle,
                                       borderRadius: BorderRadius.circular(80),
                                       boxShadow: [
                                         BoxShadow(
-                                          // color: Colors.deepOrange.withOpacity(0.25),
-
                                           color: isUnlocked
                                               ? (isCurrent
-                                                  ? levelLockedStyle
-                                                      .withOpacity(0.25)
-                                                  : levelUnlockedStyle
-                                                      .withOpacity(0.25))
-                                              : currentLevelStyle
-                                                  .withOpacity(0.25),
-
+                                              ? levelLockedStyle.withOpacity(0.25)
+                                              : levelUnlockedStyle.withOpacity(0.25))
+                                              : currentLevelStyle.withOpacity(0.25),
                                           spreadRadius: 2,
                                           blurRadius: 8,
                                           offset: const Offset(4, 4),
@@ -125,19 +176,22 @@ class _LevelsPageState extends State<LevelsPage> with TickerProviderStateMixin {
                                     child: Center(
                                       child: isUnlocked
                                           ? Text(
-                                              '${index + 1}',
-                                              style: TextStyle(
-                                                color: isCurrent
-                                                    ? Colors.black
-                                                    : Colors.white,
-                                                fontSize: 35,
-                                                fontWeight: isCurrent
-                                                    ? FontWeight.bold
-                                                    : FontWeight.normal,
-                                              ),
-                                            )
-                                          : Icon(Icons.lock,
-                                              color: Colors.white, size: 44),
+                                        '${index + 1}',
+                                        style: TextStyle(
+                                          color: isCurrent
+                                              ? Colors.black
+                                              : Colors.white,
+                                          fontSize: 35,
+                                          fontWeight: isCurrent
+                                              ? FontWeight.bold
+                                              : FontWeight.normal,
+                                        ),
+                                      )
+                                          : const Icon(
+                                        Icons.lock,
+                                        color: Colors.white,
+                                        size: 44,
+                                      ),
                                     ),
                                   ),
                                 ),

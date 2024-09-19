@@ -1,18 +1,17 @@
 
 // --------
-// previous correct code:
+// Correct code:
 import 'package:flutter/material.dart';
-import 'package:quranic_vocabulary/levels.dart';
 import 'models.dart';
 import 'db.dart';
-import 'games/test2.dart';
+import 'games/testgame.dart';
 import 'constants.dart';
 
 class LessonPage extends StatelessWidget {
   final int level;
-  final int occur;
+  final List<List<int>> allQuestions;
 
-  LessonPage({required this.level, this.occur = -1});
+  LessonPage({required this.level, required this.allQuestions});
 
   Future<Word?> getWordDetail(int level) async {
     final dbHelper = DatabaseHelper();
@@ -64,17 +63,17 @@ class LessonPage extends StatelessWidget {
               color: const Color(0xffe6e6e6),
               child: Column(
                 children: [
-                  const SizedBox(height: 15),
+                  const SizedBox(height: 5),
 
-                  Row(mainAxisAlignment: MainAxisAlignment.end, children: [
-                    Text(
-                      word.type,
-                      style:
-                      const TextStyle(fontSize: 20, color: Colors.black87),
-                      textAlign: TextAlign.end,
-                    ),
-                    const SizedBox(width: 20.0),
-                  ]),
+                  // Row(mainAxisAlignment: MainAxisAlignment.end, children: [
+                  //   Text(
+                  //     word.type,
+                  //     style:
+                  //     const TextStyle(fontSize: 20, color: Colors.black87),
+                  //     textAlign: TextAlign.end,
+                  //   ),
+                  //   const SizedBox(width: 20.0),
+                  // ]),
 
                   Padding(
                     padding: const EdgeInsets.all(20.0),
@@ -85,13 +84,30 @@ class LessonPage extends StatelessWidget {
                         color: Colors.white70,
                         borderRadius: BorderRadius.circular(20),
                       ),
-                      child: Text(
-                        word.word,
-                        style: const TextStyle(
-                            fontSize: 115, fontFamily: 'quranic'),
+                      child: Column(
+                        children: [
+                          Row(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                            const SizedBox(width: 20.0, height: 30.0),
+                            Text(
+                              word.type,
+                              style:
+                              const TextStyle(fontSize: 20, color: Colors.black38),
+                              textAlign: TextAlign.end,
+                            ),
+                          ]),
+                          Text(
+                            word.word,
+                            style: const TextStyle(
+                                fontSize: 115, fontFamily: 'quranic'),
+                          ),
+                        ],
                       ),
                     ),
                   ),
+
 
                   Text(
                     word.ru,
@@ -139,10 +155,10 @@ class LessonPage extends StatelessWidget {
                       Navigator.push(
                           context,
                           MaterialPageRoute(
-                              builder: (context) => GamesPage(
+                              builder: (context) => TestGame(
+                                allQuestions: allQuestions,
                                 theWord: word,
                                 currentLevel: word.level,
-                                updateUnlockedLevels: currentLevel,
                               )));
                     },
                     child: Text('Пройти ${word.level} уровень!'),
@@ -156,4 +172,6 @@ class LessonPage extends StatelessWidget {
     );
   }
 }
+
+
 

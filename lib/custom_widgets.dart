@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 class FeedbackMessages {
   static const List<String> correctMessages = [
     "Молодец!",
-    "Отлично!",
+    "Barakallah!",
+    "Ma shaa Allah!",
     "Так держать!",
     "Правильно!",
   ];

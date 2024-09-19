@@ -1,159 +1,212 @@
-// import 'dart:async';
-// import 'dart:math';
-// import 'package:flutter/material.dart';
-// import 'package:audioplayers/audioplayers.dart';
-// import '../custom_widgets.dart';
-// import '../models.dart'; // Import your models
-//
-// class MatchingGamePage extends StatefulWidget {
-//   final List<int> wordIndexes; // List of word indexes for the matching game
-//
-//   MatchingGamePage({required this.wordIndexes});
-//
-//   @override
-//   _MatchingGamePageState createState() => _MatchingGamePageState();
-// }
-//
-// class _MatchingGamePageState extends State<MatchingGamePage> {
-//   final AudioPlayer _audioPlayer = AudioPlayer(); // Audio player instance
-//   List<Word> _words = [];
-//   List<String> _translations = [];
-//   List<String> _shuffledTranslations = [];
-//   Map<String, String> _wordToTranslation = {};
-//   String? _selectedWord;
-//   String? _selectedTranslation;
-//   int lives = 3; // Start with three lives
-//   final _random = Random();
-//
-//   @override
-//   void initState() {
-//     super.initState();
-//     _loadWords();
-//   }
-//
-//   Future<void> _loadWords() async {
-//     // Simulate loading words from the database
-//     // Replace this with actual database queries
-//     List<Word> words = await fetchWordsFromDatabase(widget.wordIndexes);
-//     setState(() {
-//       _words = words;
-//       _translations = words.map((w) => w.translation).toList();
-//       _shuffledTranslations = List.from(_translations)..shuffle();
-//       _wordToTranslation = Map.fromIterable(words,
-//           key: (w) => w.word,
-//           value: (w) => w.translation);
-//     });
-//   }
-//
-//   Future<void> _playSound(bool isCorrect) async {
-//     String sound = isCorrect
-//         ? 'assets/sounds/correct.mp3'
-//         : 'assets/sounds/incorrect.mp3';
-//     await _audioPlayer.play(AssetSource(sound));
-//   }
-//
-//   void _handleWordSelection(String word) {
-//     setState(() {
-//       _selectedWord = word;
-//     });
-//   }
-//
-//   void _handleTranslationSelection(String translation) {
-//     if (_selectedWord == null) return;
-//
-//     if (_wordToTranslation[_selectedWord] == translation) {
-//       _playSound(true);
-//       _showFeedbackMessage("Correct!", Colors.green);
-//       _removeMatchedPair(_selectedWord!, translation);
-//     } else {
-//       _playSound(false);
-//       _showFeedbackMessage("Try Again!", Colors.red);
-//       setState(() {
-//         _selectedWord = null;
-//         lives--;
-//         if (lives <= 0) {
-//           Navigator.pop(context); // End the game
-//         }
-//       });
-//     }
-//   }
-//
-//   void _removeMatchedPair(String word, String translation) {
-//     setState(() {
-//       _words.removeWhere((w) => w.word == word);
-//       _translations.remove(translation);
-//       _shuffledTranslations.remove(translation);
-//       _selectedWord = null;
-//     });
-//   }
-//
-//   void _showFeedbackMessage(String message, Color color) {
-//     showDialog(
-//       context: context,
-//       builder: (context) {
-//         return AlertDialog(
-//           backgroundColor: color,
-//           title: Text(message, style: TextStyle(color: Colors.white)),
-//           content: SizedBox(
-//             height: 60,
-//             child: Center(
-//               child: CircularProgressIndicator(),
-//             ),
-//           ),
-//         );
-//       },
-//     );
-//     Timer(const Duration(seconds: 1), () {
-//       Navigator.of(context).pop(); // Close the dialog after 1 second
-//     });
-//   }
-//
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       appBar: AppBar(
-//         title: Text("Matching Game"),
-//         actions: [
-//           Padding(
-//             padding: const EdgeInsets.all(8.0),
-//             child: Center(
-//               child: Text('Lives: $lives'),
-//             ),
-//           ),
-//         ],
-//       ),
-//       body: _words.isEmpty
-//           ? Center(child: Text("No words to display"))
-//           : Row(
-//         children: [
-//           Expanded(
-//             child: ListView(
-//               children: _words.map((word) {
-//                 return ListTile(
-//                   title: Text(word.word),
-//                   tileColor: _selectedWord == word.word
-//                       ? Colors.blue.shade100
-//                       : Colors.white,
-//                   onTap: () => _handleWordSelection(word.word),
-//                 );
-//               }).toList(),
-//             ),
-//           ),
-//           Expanded(
-//             child: ListView(
-//               children: _shuffledTranslations.map((translation) {
-//                 return ListTile(
-//                   title: Text(translation),
-//                   tileColor: _selectedTranslation == translation
-//                       ? Colors.blue.shade100
-//                       : Colors.white,
-//                   onTap: () => _handleTranslationSelection(translation),
-//                 );
-//               }).toList(),
-//             ),
-//           ),
-//         ],
-//       ),
-//     );
-//   }
-// }
+import 'dart:math';
+import 'package:flutter/material.dart';
+import '../db.dart'; // Assuming you have a database to fetch words
+import '../models.dart'; // Assuming Word is a model with 'word' and 'translation'
+
+class MatchingGame extends StatefulWidget {
+  final List<Word> words; // List of words to match
+
+  MatchingGame({required this.words});
+
+  @override
+  _MatchingGameState createState() => _MatchingGameState();
+}
+
+class _MatchingGameState extends State<MatchingGame> {
+  List<Word> shuffledWords = [];
+  List<String> translations = [];
+  List<bool> matched = [];
+  int selectedWordIndex = -1;
+  int selectedTranslationIndex = -1;
+  int lives = 3;
+  int totalMatches = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _shuffleWords();
+  }
+
+  // Shuffle words and translations separately to create the game layout
+  void _shuffleWords() {
+    shuffledWords = List.from(widget.words);
+    translations = widget.words.map((word) => word.translation).toList();
+
+    shuffledWords.shuffle();
+    translations.shuffle();
+
+    // Mark all pairs as unmatched at the start
+    matched = List.filled(widget.words.length, false);
+  }
+
+  // Function to handle word selection
+  void _selectWord(int index) {
+    setState(() {
+      selectedWordIndex = index;
+    });
+
+    // Check if both word and translation are selected
+    if (selectedTranslationIndex != -1) {
+      _checkMatch();
+    }
+  }
+
+  // Function to handle translation selection
+  void _selectTranslation(int index) {
+    setState(() {
+      selectedTranslationIndex = index;
+    });
+
+    // Check if both word and translation are selected
+    if (selectedWordIndex != -1) {
+      _checkMatch();
+    }
+  }
+
+  // Check if the selected word and translation match
+  void _checkMatch() {
+    if (shuffledWords[selectedWordIndex].translation ==
+        translations[selectedTranslationIndex]) {
+      // Correct match
+      setState(() {
+        matched[selectedWordIndex] = true;
+        totalMatches++;
+      });
+
+      // Reset selections
+      selectedWordIndex = -1;
+      selectedTranslationIndex = -1;
+
+      // Check if the game is won
+      if (totalMatches == widget.words.length) {
+        _showVictoryDialog();
+      }
+    } else {
+      // Incorrect match
+      setState(() {
+        lives--;
+      });
+
+      if (lives == 0) {
+        _showGameOverDialog();
+      }
+
+      // Reset selections
+      selectedWordIndex = -1;
+      selectedTranslationIndex = -1;
+    }
+  }
+
+  // Show a dialog when the user wins the game
+  void _showVictoryDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Victory!'),
+        content: Text('You matched all the words correctly.'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.pop(context); // Return to previous screen
+            },
+            child: Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Show a dialog when the user runs out of lives
+  void _showGameOverDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Game Over'),
+        content: Text('You ran out of lives.'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.pop(context); // Return to previous screen
+            },
+            child: Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Matching Game'),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            // Display lives
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(3, (index) {
+                return Icon(
+                  index < lives ? Icons.favorite : Icons.favorite_border,
+                  color: Colors.red,
+                );
+              }),
+            ),
+            SizedBox(height: 20),
+            // Display words and translations in two columns
+            Expanded(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  // Column of words
+                  Column(
+                    children: List.generate(shuffledWords.length, (index) {
+                      return GestureDetector(
+                        onTap: matched[index] ? null : () => _selectWord(index),
+                        child: Container(
+                          margin: EdgeInsets.all(8),
+                          padding: EdgeInsets.all(16),
+                          color: selectedWordIndex == index
+                              ? Colors.blueAccent
+                              : Colors.grey[200],
+                          child: Text(
+                            shuffledWords[index].word,
+                            style: TextStyle(fontSize: 18),
+                          ),
+                        ),
+                      );
+                    }),
+                  ),
+                  // Column of translations
+                  Column(
+                    children: List.generate(translations.length, (index) {
+                      return GestureDetector(
+                        onTap: matched.contains(true) ? null : () => _selectTranslation(index),
+                        child: Container(
+                          margin: EdgeInsets.all(8),
+                          padding: EdgeInsets.all(16),
+                          color: selectedTranslationIndex == index
+                              ? Colors.blueAccent
+                              : Colors.grey[200],
+                          child: Text(
+                            translations[index],
+                            style: TextStyle(fontSize: 18),
+                          ),
+                        ),
+                      );
+                    }),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

@@ -65,7 +65,8 @@ flutter:
   assets:
      - assets/images/background.jpg
      - assets/images/PageTwo.jpg
-     - assets/sounds/
+     - assets/sounds/correct.mp3
+     - assets/sounds/incorrect.mp3
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware
