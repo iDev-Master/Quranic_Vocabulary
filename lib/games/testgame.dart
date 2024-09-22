@@ -1,4 +1,4 @@
-// ---------- new ChatGPT:
+// ---------- final test Game
 
 import 'dart:async';
 import 'dart:math';
@@ -9,21 +9,17 @@ import '../constants.dart';
 import '../models.dart';
 import '../custom_widgets.dart';
 import '../db.dart';
-
-
+import 'matching.dart';
 
 class TestGame extends StatefulWidget {
-  final List<List<int>> allQuestions;
+  final List<List<int>> allQuestionsIndexes;
   final Word theWord;
   late final int currentLevel;
-  // final int updateUnlockedLevels;
 
-  TestGame({
-    required this.theWord,
-    required this.currentLevel,
-    // required this.updateUnlockedLevels,
-    required this.allQuestions
-  });
+  TestGame(
+      {required this.theWord,
+      required this.currentLevel,
+      required this.allQuestionsIndexes});
 
   @override
   _TestGameState createState() => _TestGameState();
@@ -60,7 +56,8 @@ class _TestGameState extends State<TestGame> with TickerProviderStateMixin {
       curve: Curves.easeInOut,
     ));
 
-    prepareQuestion(widget.allQuestions[0][mainIndex]); // Загружаем первый вопрос
+    prepareQuestion(
+        widget.allQuestionsIndexes[0][mainIndex]); // Загружаем первый вопрос
   }
 
   int generateRandomNumberInRange(int min, int max) {
@@ -71,14 +68,13 @@ class _TestGameState extends State<TestGame> with TickerProviderStateMixin {
   Future<void> prepareQuestion(int index) async {
     List<Word> testingQuestions = [];
 
-    // Получаем правильный ответ (слово) из базы данных
+    // Получаем правильное слово из базы данных
     Word? correctWord = await dbHelper.getWord(index);
     if (correctWord != null) {
       testingQuestions.add(correctWord);
 
-      // Обновляем текущее слово для отображения вопроса
       setState(() {
-        currentWord = correctWord.word; // Сохраняем новое слово в состоянии
+        currentWord = correctWord.word;
       });
     }
 
@@ -86,8 +82,10 @@ class _TestGameState extends State<TestGame> with TickerProviderStateMixin {
     List<int> wrongAnswersIndex = [];
     while (wrongAnswersIndex.length < 3) {
       int randomIndex = generateRandomNumberInRange(1, 125);
-      if (!wrongAnswersIndex.contains(randomIndex)) {
-        wrongAnswersIndex.add(randomIndex);
+      if (randomIndex != index) {
+        if (!wrongAnswersIndex.contains(randomIndex)) {
+          wrongAnswersIndex.add(randomIndex);
+        }
       }
     }
 
@@ -119,9 +117,8 @@ class _TestGameState extends State<TestGame> with TickerProviderStateMixin {
   // Остальные методы остаются такими же, как в предыдущем коде
 
   Future<void> _playSound(bool isCorrect) async {
-    String sound = isCorrect
-        ? 'assets/sounds/correct.mp3'
-        : 'assets/sounds/incorrect.mp3';
+    String sound =
+        isCorrect ? 'assets/sounds/correct.mp3' : 'assets/sounds/incorrect.mp3';
     await _audioPlayer.play(AssetSource(sound));
   }
 
@@ -135,11 +132,14 @@ class _TestGameState extends State<TestGame> with TickerProviderStateMixin {
     setState(() {
       _isAnswering = true;
       _feedbackMessage = isCorrect
-          ? FeedbackMessages.correctMessages[_random.nextInt(FeedbackMessages.correctMessages.length)]
-          : FeedbackMessages.incorrectMessages[_random.nextInt(FeedbackMessages.incorrectMessages.length)];
+          ? FeedbackMessages.correctMessages[
+              _random.nextInt(FeedbackMessages.correctMessages.length)]
+          : FeedbackMessages.incorrectMessages[
+              _random.nextInt(FeedbackMessages.incorrectMessages.length)];
 
       _selectedButtonIndex = index;
-      _messageBackgroundColor = isCorrect ? Colors.green.shade900 : Colors.red.shade900;
+      _messageBackgroundColor =
+          isCorrect ? Colors.green.shade900 : Colors.red.shade900;
     });
 
     _playSound(isCorrect);
@@ -164,15 +164,31 @@ class _TestGameState extends State<TestGame> with TickerProviderStateMixin {
       }
 
       _answerCount++;
-      if (_answerCount < 10) {
+      if (_answerCount < totalTests) {
         mainIndex++;
-        prepareQuestion(widget.allQuestions[0][mainIndex]);
+        prepareQuestion(widget.allQuestionsIndexes[0][mainIndex]);
       } else {
-        if (score / 10 > widget.currentLevel) {
-          widget.currentLevel++;
+        if (score / 10 > currentLevel) {
+          currentLevel++;
         }
         Navigator.pop(context);
+
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (context) => MatchingGame(
+                    questionsIndexes: widget.allQuestionsIndexes,
+                    lives: lives,
+                    currentLevel: widget.theWord.level,
+                  )),
+        );
       }
+      // } else {
+      //   if (score / 10 > widget.currentLevel) {
+      //     widget.currentLevel++;
+      //   }
+      //   Navigator.pop(context);
+      // }
     });
   }
 
@@ -195,7 +211,7 @@ class _TestGameState extends State<TestGame> with TickerProviderStateMixin {
         title: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text('Уровень: ${widget.theWord.level}'),
+            Text('Уровень: ${widget.theWord.level} | очки: $score'),
             Row(
               children: List.generate(3, (index) {
                 return Icon(
@@ -208,56 +224,59 @@ class _TestGameState extends State<TestGame> with TickerProviderStateMixin {
         ),
       ),
       body: shuffledAnswers == null
-          ? const Center(child: CircularProgressIndicator()) // Показываем индикатор загрузки
+          ? const Center(
+              child:
+                  CircularProgressIndicator()) // Показываем индикатор загрузки
           : Stack(
-        children: [
-          Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Обновляемый вопрос (слово)
-                Text(
-                  currentWord, // Используем обновляемое слово из состояния
-                  style: const TextStyle(fontSize: 80, fontFamily: 'quranic'),
+                Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      // Обновляемый вопрос (слово)
+                      Text(
+                        currentWord, // Используем обновляемое слово из состояния
+                        style: const TextStyle(
+                            fontSize: 80, fontFamily: 'quranic'),
+                      ),
+                      const SizedBox(height: 25),
+                      const Text(
+                        "Выберите правильный перевод:",
+                        style: TextStyle(fontSize: 18),
+                      ),
+                      const SizedBox(height: 15),
+                      ...shuffledAnswers!.asMap().entries.map((entry) {
+                        int index = entry.key;
+                        Map<String, dynamic> answer = entry.value;
+                        return _buildAnswerButton(
+                          answer['text'],
+                          answer['isCorrect'],
+                          screenWidth,
+                          index,
+                        );
+                      }).toList(),
+                      const SizedBox(height: 20),
+                      // Text('Ответов: $_answerCount/$totalTests'),
+                      // Text('Очки: $score'),
+                      const SizedBox(height: 20),
+                    ],
+                  ),
                 ),
-                const SizedBox(height: 25),
-                const Text(
-                  "Выберите правильный перевод:",
-                  style: TextStyle(fontSize: 18),
-                ),
-                const SizedBox(height: 15),
-                ...shuffledAnswers!.asMap().entries.map((entry) {
-                  int index = entry.key;
-                  Map<String, dynamic> answer = entry.value;
-                  return _buildAnswerButton(
-                    answer['text'],
-                    answer['isCorrect'],
-                    screenWidth,
-                    index,
-                  );
-                }).toList(),
-                const SizedBox(height: 20),
-                Text('Ответов: $_answerCount/x'),
-                Text('Очки: $score'),
-                const SizedBox(height: 20),
+                if (_feedbackMessage.isNotEmpty)
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    bottom: 20,
+                    child: SlideTransition(
+                      position: _slideAnimation,
+                      child: FeedbackMessages.feedbackMessageWidget(
+                        _feedbackMessage,
+                        _messageBackgroundColor,
+                      ),
+                    ),
+                  ),
               ],
             ),
-          ),
-          if (_feedbackMessage.isNotEmpty)
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: 20,
-              child: SlideTransition(
-                position: _slideAnimation,
-                child: FeedbackMessages.feedbackMessageWidget(
-                  _feedbackMessage,
-                  _messageBackgroundColor,
-                ),
-              ),
-            ),
-        ],
-      ),
     );
   }
 
@@ -289,7 +308,8 @@ class _TestGameState extends State<TestGame> with TickerProviderStateMixin {
       width: screenWidth * 0.85,
       margin: const EdgeInsets.symmetric(vertical: 12),
       child: ElevatedButton(
-        onPressed: _isAnswering ? null : () => _answerQuestion(isCorrect, index),
+        onPressed:
+            _isAnswering ? null : () => _answerQuestion(isCorrect, index),
         style: ButtonStyle(
           backgroundColor: MaterialStateProperty.all(backgroundColor),
           side: MaterialStateProperty.all(
@@ -298,7 +318,8 @@ class _TestGameState extends State<TestGame> with TickerProviderStateMixin {
           shape: MaterialStateProperty.all(
             RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
-          padding: MaterialStateProperty.all(const EdgeInsets.symmetric(vertical: 12)),
+          padding: MaterialStateProperty.all(
+              const EdgeInsets.symmetric(vertical: 20)),
         ),
         child: Text(
           text,
@@ -308,4 +329,3 @@ class _TestGameState extends State<TestGame> with TickerProviderStateMixin {
     );
   }
 }
-

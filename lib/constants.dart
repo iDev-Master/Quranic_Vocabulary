@@ -36,5 +36,5 @@ const Color currentLevelStyle = Colors.grey;
 // STYLES OF GAMES PAGE
 // Test
 int testDuration = 20;
-
+int totalTests = 6;
 

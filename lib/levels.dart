@@ -50,6 +50,24 @@ class _LevelsPageState extends State<LevelsPage> with TickerProviderStateMixin {
     });
   }
 
+  // void changeLevel() {
+  //   if (score >= 10 && currentLevel == 9) {
+  //     currentLevel++;
+  //   } else if (score >= 20 && currentLevel == 10) {
+  //     currentLevel++;
+  //   }
+  //
+  //   // if (score > 20) {
+  //   //   currentLevel++;
+  //   // } else if (score > 30) {
+  //   //   currentLevel++;
+  //   // } else if (score > 40) {
+  //   //   currentLevel++;
+  //   // } else if (score > 50) {
+  //   //   currentLevel++;
+  //   // }
+  // }
+
   @override
   void dispose() {
     // Dispose all controllers and scroll controller
@@ -95,7 +113,7 @@ class _LevelsPageState extends State<LevelsPage> with TickerProviderStateMixin {
     });
   }
 
-  var questionIndexGenerator = GenerateQuestionsIndexes(howManyQuestions: 10);
+  // var questionIndexGenerator = GenerateQuestionsIndexes(howManyTestQuestions: totalTests);
 
   @override
   Widget build(BuildContext context) {
@@ -138,9 +156,11 @@ class _LevelsPageState extends State<LevelsPage> with TickerProviderStateMixin {
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
+
                                         builder: (context) => LessonPage(
                                           level: index + 1,
-                                          allQuestions: questionIndexGenerator.generateFirstList(index + 1),
+                                          // questionsIndexes: questionIndexGenerator.generateQuestionIndexes(index + 1),
+                                          // allQuestions: questionIndexGenerator.generateFirstList(index + 1),
                                         ),
                                       ),
                                     );

@@ -143,7 +143,7 @@ List<Map<String, dynamic>> words = [
   },
   {
     'word': '	مَنۡ	',
-    'Ru': '	От, кто	',
+    'Ru': 'Кто',
     'tj': '	Кӣ	',
     'uz': '	-	',
     'ir': '	چه کسی	',
