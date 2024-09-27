@@ -8,12 +8,13 @@ const int totalLevels = 125;
 const int Duration_of_the_animation = 500;
 const int menuAnimationDelay = 20;
 
-double progress = 0.3;
+double progress = 0.1;
 int currentLevel = 9;
 int score = 0;
 int lives = 3;
 
-// STYLES OF MENU PAGE
+// MENU PAGE
+// buttons Active
 final ButtonStyle menuButtonsTheme = ElevatedButton.styleFrom(
     backgroundColor: Colors.blue,
     // backgroundColor: Color(0xff205493),
@@ -24,9 +25,23 @@ final ButtonStyle menuButtonsTheme = ElevatedButton.styleFrom(
     ),
     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)));
 
+// Buttons inactive
+final ButtonStyle menuButtonsThemeLocked = ElevatedButton.styleFrom(
+    backgroundColor: Colors.grey,
+    // backgroundColor: Color(0xff205493),
+    foregroundColor: Colors.white,
+    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 18),
+    textStyle: const TextStyle(
+      fontSize: 30,
+    ),
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)));
 
 
-// STYLES OF LEVELS PAGE
+
+
+
+
+// LEVELS PAGE
 const Color levelUnlockedStyle = Colors.lightBlueAccent;
 const Color levelLockedStyle = Colors.amberAccent;
 const Color currentLevelStyle = Colors.grey;

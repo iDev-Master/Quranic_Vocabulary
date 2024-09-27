@@ -3,8 +3,8 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
 import 'lesson.dart';
-import 'constants.dart';
-import 'games/questionary.dart';
+import 'constants/constants.dart';
+import 'constants/questionary.dart';
 
 class LevelsPage extends StatefulWidget {
   @override

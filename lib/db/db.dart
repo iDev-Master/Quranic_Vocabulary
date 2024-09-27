@@ -2,7 +2,7 @@
 
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
-import 'models.dart';
+import '../models/models.dart';
 import 'words.dart';
 
 

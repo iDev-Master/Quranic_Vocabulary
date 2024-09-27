@@ -4,9 +4,9 @@
 
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:quranic_vocabulary/constants.dart';
-import '../db.dart'; // Assuming you have a database to fetch words
-import '../models.dart'; // Assuming Word is a model with 'word' and 'translation'
+import 'package:quranic_vocabulary/constants/constants.dart';
+import '../db/db.dart'; // Assuming you have a database to fetch words
+import '../models/models.dart'; // Assuming Word is a model with 'word' and 'translation'
 
 class MatchingGame extends StatefulWidget {
   final List<List<int>> questionsIndexes;

@@ -4,11 +4,11 @@ import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
-import 'package:quranic_vocabulary/games/questionary.dart';
-import '../constants.dart';
-import '../models.dart';
-import '../custom_widgets.dart';
-import '../db.dart';
+import 'package:quranic_vocabulary/constants/questionary.dart';
+import '../constants/constants.dart';
+import '../models/models.dart';
+import '../constants/custom_widgets.dart';
+import '../db/db.dart';
 import 'matching.dart';
 
 class TestGame extends StatefulWidget {

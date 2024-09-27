@@ -1,12 +1,12 @@
 // --------
 // Correct code:
 import 'package:flutter/material.dart';
-import 'models.dart';
-import 'db.dart';
+import 'models/models.dart';
+import 'db/db.dart';
 import 'games/testgame.dart';
-import 'constants.dart';
+import 'constants/constants.dart';
 import './games/matching.dart';
-import 'games/questionary.dart';
+import 'constants/questionary.dart';
 
 class LessonPage extends StatelessWidget {
   final int level;
